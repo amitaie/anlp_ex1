@@ -4,7 +4,7 @@ from datasets import load_dataset, DatasetDict
 from transformers import AutoConfig, AutoTokenizer, AutoModelForSequenceClassification, TrainingArguments, Trainer, \
     EvalPrediction
 from evaluate import load
-import wandb
+#import wandb
 import os
 import numpy as np
 
@@ -67,9 +67,6 @@ def write_stats(stats, predict_time, train_time):
 
 
 def main(args):
-    # from google.colab import drive
-    #
-    # drive.mount('/content/gdrive')
     output_dir = '/content/gdrive/MyDrive/anlp_ex1'
     ALL_MODELS = ['bert-base-uncased', 'roberta-base', 'google/electra-base-generator']
 
@@ -91,12 +88,12 @@ def main(args):
             model = AutoModelForSequenceClassification.from_pretrained(model_name, config=config)
             exp_name = f"model_{model_name.replace('/', '-')}_seed_{seed}"
 
-            wandb.init(project='anlp_ex1', entity='amitai-edrei',
-                       name=exp_name, config={'model_name': model_name, 'seed': seed},
-                       reinit=True)
+            #wandb.init(project='anlp_ex1', entity='amitai-edrei',
+            #          name=exp_name, config={'model_name': model_name, 'seed': seed},
+            #          reinit=True)
 
             training_args = TrainingArguments(output_dir=os.path.join(output_dir, exp_name),
-                                              report_to='wandb',
+                                              # report_to='wandb',
                                               run_name=exp_name,
                                               save_strategy='no',
                                               seed=seed)
@@ -118,15 +115,13 @@ def main(args):
                                       trainer=trainer, seed=seed,
                                       eval_accuracy=eval_result['eval_accuracy']))
 
-            wandb.finish()
+            # wandb.finish()
 
         stats[model_name] = {'mean': np.array(model_res).mean(), 'std': np.array(model_res).std()}
 
     best_model_data = select_best_model_data(training_data, stats)
-    print(f"\n\nsave prediction for best model - {best_model_data['exp_name']}\n\n")
     predict_time = predict_and_save(best_model_data['model_name'], best_model_data['trainer'],
                                     sliced_datasets['test'])
-
     write_stats(stats, predict_time, train_time)
 
 
